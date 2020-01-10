@@ -220,7 +220,8 @@ def arr_2(A):
     True
     """
 
-    return ...
+    result = (A%16) == 0
+    return result
 
 
 def arr_3(A):
@@ -244,7 +245,7 @@ def arr_3(A):
     True
     """
 
-    return ...
+    return np.round(np.diff(A)/A[:-1],2)
 
 
 def arr_4(A):
@@ -266,7 +267,9 @@ def arr_4(A):
     True
     """
 
-    return ...
+    day = np.cumsum(20%A)
+    result = (A > day).tolist().index(False)
+    return result
 
 
 # ---------------------------------------------------------------------
@@ -293,7 +296,54 @@ def movie_stats(movies):
     True
     """
 
-    return ...
+    try:
+        num_years = len(movies['Year'])
+    except:
+        num_years = None
+    try:
+        tot_movies = sum(movies['Number of Movies'])
+    except:
+        tot_movies = None
+    try:
+        sorted_byNOM = movies[movies['Number of Movies'] == min(movies['Number of Movies'])]
+        yr_fewest_movies = sorted_byNOM.sort_values(by = 'Year')['Year'].values[0]
+    except:
+        yr_fewest_movies = None
+    try:
+        avg_gross = np.mean(movies['Total Gross'].tolist())
+    except:
+        avg_gross = None
+
+    try:
+        gross = movies['Total Gross'].values
+        num =  movies['Number of Movies'].values
+        sub = movies
+        sub['gross per movie'] = gross/num
+        highest_per_movie = sub.sort_values(by='gross per movie',ascending = False)['Year'].values[0]
+    except:
+        highest_per_movie = None
+
+    try:
+        second_lowest= movies.sort_values(by='Total Gross')['#1 Movie'].values[1]
+    except:
+        second_lowest = None
+
+    try:
+        helper = lambda i : True if 'Harry Potter' in i else False
+        Harry = list(map(helper,movies['#1 Movie'].values))
+        copy = movies
+        copy['Harry']=Harry
+        sub = copy[copy['Harry']==True]
+        second = sub['Year'].values+1
+        A = movies[movies['Year'].isin(second) ]
+        avg_after_harry =np.mean(A['Number of Movies'].values)
+    except:
+        avg_after_harry = None
+
+    content = [num_years, tot_movies,yr_fewest_movies,avg_gross,highest_per_movie,second_lowest,avg_after_harry]
+    ins = ['num_years', 'tot_movies', 'yr_fewest_movies', 'avg_gross', 'highest_per_movie','second_lowest','avg_after_harry']
+    result = pd.Series(content, index =ins)
+    return result
 
 
 # ---------------------------------------------------------------------
@@ -330,7 +380,22 @@ def parse_malformed(fp):
     True
     """
 
-    return ...
+    with open(fp) as fh:
+        file = fh.read()
+    modified_file = [i.split(',') for i in s.split()]
+    for i in modified_file:
+        if '' in i:
+            i.remove('')
+    first = [i[0] for i in modified_file[1:]]
+    last = [i[1] for i in modified_file[1:]]
+
+    weight = [float(i[2].strip('"')) for i in modified_file[1:]]
+    height = [float(i[3].strip('"')) for i in modified_file[1:]]
+    geo = [(i[4]+','+i[5]).strip('"') for i in modified_file[1:]]
+    df = pd.DataFrame({modified_file[0][0]:first,modified_file[0][1]:last,modified_file[0][2]:weight,
+                       modified_file[0][3]:height,modified_file[0][4]:geo})
+
+    return df
 
 
 # ---------------------------------------------------------------------
