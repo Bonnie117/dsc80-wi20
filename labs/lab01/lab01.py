@@ -11,11 +11,11 @@ import numpy as np
 
 def consecutive_ints(ints):
     """
-    consecutive_ints tests whether a list contains two 
+    consecutive_ints tests whether a list contains two
     adjacent elements that are consecutive integers.
 
     :param ints: a list of integers
-    :returns: a boolean value if ints contains two 
+    :returns: a boolean value if ints contains two
     adjacent elements that are consecutive integers.
 
     :Example:
@@ -37,7 +37,7 @@ def consecutive_ints(ints):
 
 
 # ---------------------------------------------------------------------
-# Question # 1 
+# Question # 1
 # ---------------------------------------------------------------------
 
 def median(nums):
@@ -49,7 +49,7 @@ def median(nums):
 
     :param nums: a non-empty list of numbers.
     :returns: the median of the list.
-    
+
     :Example:
     >>> median([6, 5, 4, 3, 2]) == 4
     True
@@ -58,8 +58,12 @@ def median(nums):
     >>> median([1, 2, 3, 4]) == 2.5
     True
     """
-    
-    return ...
+
+    middle = len(nums) // 2
+    nums.sort()
+    if not len(nums) % 2:
+        return (nums[middle - 1] + nums[middle]) / 2.0
+    return nums[middle]
 
 
 # ---------------------------------------------------------------------
@@ -83,16 +87,18 @@ def same_diff_ints(ints):
     False
     """
 
-    return ...
+    for i in range(len(ints)):
+        for j in range(len(ints)):
+            if ints[i] != ints[j] and i - j == abs(ints[i] - ints[j]):
+                return True
+    return False
 
 
-# ---------------------------------------------------------------------
-# Question # 3
 # ---------------------------------------------------------------------
 
 def prefixes(s):
     """
-    prefixes returns a string of every 
+    prefixes returns a string of every
     consecutive prefix of the input string.
 
     :param s: a string.
@@ -107,8 +113,10 @@ def prefixes(s):
     'aaaaaraaroaaron'
     """
 
-
-    return ...
+    result = ''
+    for i in range(1, len(s)+1):
+        result += s[:i]
+    return result
 
 
 # ---------------------------------------------------------------------
@@ -117,13 +125,13 @@ def prefixes(s):
 
 def evens_reversed(N):
     """
-    evens_reversed returns a string containing 
+    evens_reversed returns a string containing
     all even integers from  1  to  N  (inclusive)
-    in reversed order, separated by spaces. 
+    in reversed order, separated by spaces.
     Each integer is zero padded.
 
     :param N: a non-negative integer.
-    :returns: a string containing all even integers 
+    :returns: a string containing all even integers
     from 1 to N reversed, formatted as decsribed above.
 
     :Example:
@@ -132,8 +140,12 @@ def evens_reversed(N):
     >>> evens_reversed(10)
     '10 08 06 04 02'
     """
-    
-    return ...
+
+    result = ''
+    for i in range(N, 1, -1):
+        if i % 2 == 0:
+            result += str(i).zfill(len(str(N))) +' '
+    return result[:-1]
 
 
 # ---------------------------------------------------------------------
@@ -142,7 +154,7 @@ def evens_reversed(N):
 
 def last_chars(fh):
     """
-    last_chars takes a file object and returns a 
+    last_chars takes a file object and returns a
     string consisting of the last character of the line.
 
     :param fh: a file object to read from.
@@ -154,7 +166,12 @@ def last_chars(fh):
     'hrg'
     """
 
-    return ...
+    file = fh.read()
+    result = ''
+    for i in range(len(file)):
+        if file[i] == '\n':
+            result += file[i-1]
+    return result
 
 
 # ---------------------------------------------------------------------
@@ -179,7 +196,10 @@ def arr_1(A):
     True
     """
 
-    return ...
+    square = np.arange(len(A))**0.5
+    output = A + square
+
+    return output
 
 
 def arr_2(A):
@@ -229,9 +249,9 @@ def arr_3(A):
 
 def arr_4(A):
     """
-    Create a function arr_4 that takes in A and 
-    returns the day on which you can buy at least 
-    one share from 'left-over' money. If this never 
+    Create a function arr_4 that takes in A and
+    returns the day on which you can buy at least
+    one share from 'left-over' money. If this never
     happens, return -1. The first stock purchase occurs on day 0
     :param A: a 1d numpy array of stock prices.
     :returns: an integer of the total number of shares.
@@ -274,7 +294,7 @@ def movie_stats(movies):
     """
 
     return ...
-    
+
 
 # ---------------------------------------------------------------------
 # Question # 8
@@ -282,12 +302,12 @@ def movie_stats(movies):
 
 def parse_malformed(fp):
     """
-    Parses and loads the malformed csv data into a 
-    properly formatted dataframe (as described in 
+    Parses and loads the malformed csv data into a
+    properly formatted dataframe (as described in
     the question).
 
     :param fh: file handle for the malformed csv-file.
-    :returns: a Pandas DataFrame of the data, 
+    :returns: a Pandas DataFrame of the data,
     as specificed in the question statement.
 
     :Example:
@@ -342,7 +362,7 @@ def check_for_graded_elements():
     >>> check_for_graded_elements()
     True
     """
-    
+
     for q, elts in GRADED_FUNCTIONS.items():
         for elt in elts:
             if elt not in globals():
