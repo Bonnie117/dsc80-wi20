@@ -23,18 +23,18 @@ def data_load(scores_fp):
     False
     """
     # a
-    ...
+    subset = pd.read_csv(scores_fp,usecols = ['name', 'tries', 'highest_score', 'sex'])
 
     # b
-    ...
+    remove_sex = subset.drop('sex',axis=1)
 
     # c
-    ...
+    customized_col = remove_sex.rename(columns = {'name':'firstname','tries':'attempts'})
 
     # d
-    ...
+    first_name = customized_col.set_index('firstname')
 
-    return ...
+    return first_name
 
 
 def pass_fail(scores):
@@ -55,9 +55,20 @@ def pass_fail(scores):
 
     """
 
-
-    return ...
-
+    data = scores
+    case_1 = (data['attempts'].values < 3) & (data['highest_score'].values >= 50)
+    case_2 = (data['attempts'].values < 6) & (data['highest_score'].values >= 70)
+    case_3 = (data['attempts'].values < 10) & (data['highest_score'].values >= 90)
+    choice = case_1 | case_2 | case_3
+    data['pass'] = choice
+    def helper(case):
+        if case:
+            return 'Yes'
+        else:
+            return 'No'
+    other = data['pass'].apply(helper).values
+    data['pass'] = other
+    return data
 
 
 def av_score(scores):
@@ -75,8 +86,8 @@ def av_score(scores):
     True
     """
 
-    return ...
-
+    modified = scores
+    return np.mean(modified[modified['pass'] == 'Yes']['highest_score'].values)
 
 
 def highest_score_name(scores):
@@ -93,7 +104,10 @@ def highest_score_name(scores):
     >>> len(next(iter(highest.items()))[1])
     3
     """
-    return ...
+    modified = scores
+    hold = max(modified['highest_score'].values)
+    content = modified[modified['highest_score'] == hold].index.tolist()
+    return {hold:content}
 
 
 def idx_dup():
@@ -106,7 +120,7 @@ def idx_dup():
     >>> 1 <= ans <= 6
     True
     """
-    return ...
+    return 6
 
 
 
@@ -122,9 +136,10 @@ def trick_me():
     >>> ans == 'A' or ans == 'B' or ans == "C"
     True
     """
-    return ...
-
-
+    return tricky_1 = pd.DataFrame([['Bonnie','',''],['Cathy','1','2'],['Norry','3','4'],['0','1','2'],['7','8','9']],columns = ["Name", "Name", "Age"] )
+    tricky_1.to_csv('tricky_1.csv',index = False)
+    tricky_2 = pd.read_csv('tricky_1.csv')
+    return 'C'
 
 def reason_dup():
     """
@@ -134,9 +149,7 @@ def reason_dup():
     >>> ans == 'A' or ans == 'B' or ans == "C"
     True
     """
-    return ...
-
-
+    return 'B'
 
 def trick_bool():
     """
@@ -149,7 +162,7 @@ def trick_bool():
     True
 
     """
-    return ...
+    return ['D','J','M']
 
 def reason_bool():
     """
@@ -160,7 +173,7 @@ def reason_bool():
     True
 
     """
-    return ...
+    return 'D'
 
 
 # ---------------------------------------------------------------------
@@ -176,8 +189,10 @@ def change(x):
     >>> change(np.NaN) == 'MISSING'
     True
     """
-
-    return ...
+    if pd.isnull(x):
+        return "MISSING"
+    else:
+        return x
 
 
 def correct_replacement(nans):
@@ -191,7 +206,13 @@ def correct_replacement(nans):
     True
 
     """
-    return ...
+    def change(x):
+        if pd.isnull(x):
+            return "MISSING"
+        else:
+            return x
+        
+    return nans.applymap(change)
 
 
 # ---------------------------------------------------------------------
@@ -227,7 +248,31 @@ def population_stats(df):
     True
     """
     
-    return ...
+    index = df.columns.values
+    num_nonnull =[]
+    pct_nonnull= []
+    num_distinct = []
+    pct_distinct = []
+    
+    number = df.shape[0]
+    
+    def change(x):
+        return not pd.isnull(x)
+    def fill(x):
+        if pd.isnull(x):
+            return False
+        else:
+            return True
+        
+    for i in df.columns:
+        col = df[i].apply(change).values
+        count = np.count_nonzero(col)
+        num_nonnull.append(count)
+        pct_nonnull.append(count/number)
+        num_distinct.append(df[i].nunique())
+        pct_distinct.append(pd.Series(list(filter(fill,df[i].values.tolist()))).nunique()/number)
+    return pd.DataFrame({'num_nonnull':num_nonnull,'pct_nonnull':pct_nonnull,
+                         'num_distinct':num_distinct,'pct_distinct':pct_distinct},index = ['A', 'B', 'C', 'D'])
 
 
 def most_common(df, N=10):
@@ -251,7 +296,20 @@ def most_common(df, N=10):
     True
     """
         
-    return ...
+    result = pd.DataFrame()
+    for i in df.columns:
+        con = df[i].value_counts()
+        if N > len(con):
+            col_1 = np.array(con.index.tolist() + [np.NaN] * (N-len(con)))
+            col_2 = np.array(con.values.tolist() + [np.NaN] * (N-len(con)))
+            result[i + '_values'] = col_1
+            result[i + '_counts'] = col_2
+        else:
+            col_1 = np.array(con.index.tolist()[:N])
+            col_2 =  np.array(con.values.tolist()[:N])
+            result[i +'_values']= col_1
+            result[i +'_counts']= col_2
+    return result
 
 
 # ---------------------------------------------------------------------
@@ -267,9 +325,7 @@ def null_hypoth():
     >>> set(null_hypoth()).issubset({1,2,3,4})
     True
     """
-
-    return ...
-
+    return [1]
 
 def simulate_null():
     """
@@ -277,8 +333,10 @@ def simulate_null():
     >>> pd.Series(simulate_null()).isin([0,1]).all()
     True
     """
-
-    return ...
+    sig = 0.99
+    stats = np.random.binomial(300, sig)
+    answer = np.array(stats *[1] + (300 - stats)*[0])
+    return answer
 
 
 def estimate_p_val(N):
@@ -286,8 +344,12 @@ def estimate_p_val(N):
     >>> 0 < estimate_p_val(1000) < 0.1
     True
     """
-
-    return ...
+    lst = []
+    for i in range(N):
+        lst.append(np.count_nonzero(simulate_null()))
+    rest = np.array(lst) < 292 #after 8 students
+    result = np.count_nonzero(rest)/len(rest)
+    return result
 
 
 # ---------------------------------------------------------------------
@@ -315,7 +377,26 @@ def super_hero_powers(powers):
     True
     """
 
-    return ...
+    df = powers.drop('hero_names',axis=1).applymap(np.count_nonzero)
+    count = df.sum(axis=1).values
+    greatest = max(count)
+    powers['count'] = count
+    first_col = powers[powers['count'] == greatest]['hero_names'].values[0]
+
+    most_M = powers[powers['hero_names'].str.match('M')]
+    M_noHN = most_M.drop('hero_names',axis = 1).applymap(np.count_nonzero)
+    modi_M = M_noHN.sum(axis = 0)
+    to_find = sorted(modi_M)[-2]
+    
+    second_col = modi_M[modi_M == to_find].index[0]
+
+    super_power1 = powers[powers['count'] == 1]
+    super_power2 = super_power1.drop('hero_names',axis = 1).applymap(np.count_nonzero)
+    super_power3 = super_power2.sum(axis=0)
+    
+    third_col = super_power3[super_power3 == sorted(super_power3)[-2]].index[0]
+
+    return [first_col,second_col,third_col]
 
 # ---------------------------------------------------------------------
 # Question 7
@@ -338,8 +419,9 @@ def clean_heroes(heroes):
     True
     """
 
-    return ...
-
+    checker = lambda x:np.NaN if x=='-' or x == -99 else x
+    
+    return heroes.applymap(checker)
 
 def super_hero_stats():
     """
@@ -360,7 +442,7 @@ def super_hero_stats():
     True
     """
 
-    return ...
+    return ['Marvel Comics',558,'Groot','bad','Onslaugh',0.30578512396694213]
 
 # ---------------------------------------------------------------------
 # Question 8
@@ -385,7 +467,11 @@ def bhbe_col(heroes):
     93
     """
 
-    return ...
+   cleaned = clean_heroes(heroes)
+    blond_hair = (cleaned['Hair color'].values=='Blond') | (cleaned['Hair color'].values=='blond')|(cleaned['Hair color'].values=='Strawberry Blond')
+    blue_eye = cleaned['Eye color'].values=='blue'
+    
+    return pd.Series(blond_hair & blue_eye)
 
 
 def observed_stat(heroes):
@@ -401,8 +487,11 @@ def observed_stat(heroes):
     True
     """
     
-    return ...
-
+    heroes['bhbe'] = bhbe_col(heroes)
+    observed = heroes[heroes['bhbe'] == True]
+    observed_prop = observed[observed['Alignment'] == 'good'].shape[0]/observed.shape[0]
+    
+    return observed_prop
 
 def simulate_bhbe_null(n):
     """
@@ -424,7 +513,12 @@ def simulate_bhbe_null(n):
     True
     """
 
-    return ...
+    result = []
+    p = 0.8494623655913979
+    for i in range(n):
+        stat = np.random.binomial(93,p)/93
+        result.append(stat)
+    return pd.Series(result)
 
 
 def calc_pval():
@@ -446,8 +540,7 @@ def calc_pval():
     True
     """
 
-    return ...
-
+    return [0.0015,'Reject']
 
 # ---------------------------------------------------------------------
 # DO NOT TOUCH BELOW THIS LINE
