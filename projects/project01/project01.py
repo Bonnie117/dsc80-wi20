@@ -32,7 +32,26 @@ def get_assignment_names(grades):
     True
     '''
     
-    return ...
+    from re import search
+    dic = {}
+    key_list = ['lab', 'project', 'midterm', 'final', 'disc', 'checkpoint']
+    rest_column_names = []
+    for j in grades.columns:
+        if '-' in j:
+            rest_column_names.append(j)
+    new_colum = grades.copy()
+    new_colum = new_colum.drop(columns = rest_column_names)
+    for i in key_list:
+        dic[i] = []
+        for j in new_colum.columns:
+            if i in j or i.capitalize() in j:
+                if search(i+'[0-9]{2}$',j) :
+                    dic[i].append(j)
+                elif search(i.capitalize(),j):
+                    dic[i].append(j)
+                elif search(i+'[a-zA-Z]+[0-9]{2}$',j) :
+                    dic[i].append(j)
+    return dic
 
 
 # ---------------------------------------------------------------------
@@ -55,13 +74,26 @@ def projects_total(grades):
     >>> 0.7 < out.mean() < 0.9
     True
     '''
-    return ...
+    
+    student_score_list = []
+    student_score_max = []
+    student_score = pd.Series()
+    for col in grades.columns:
+        if 'project' in col and not 'Max' in col and not 'Lateness' in col:
+            student_score_list.append(col)
+        if 'project' in col and 'Max' in col and not 'Lateness' in col:
+             student_score_max.append(col)
+    student_score_max = grades[student_score_max].sum(axis = 1)
+    student_score_sum = grades[student_score_list].sum(axis = 1)/student_score_max[1]
+    
+    return student_score_sum
+
+
 
 
 # ---------------------------------------------------------------------
 # Question # 3
 # ---------------------------------------------------------------------
-
 
 def last_minute_submissions(grades):
     """
@@ -81,14 +113,27 @@ def last_minute_submissions(grades):
     >>> (out > 0).sum()
     8
     """
-
-    return ...
+    
+    student_lab_lateness = []
+    for col in grades.columns:
+        if 'lab' in col and not 'Max' in col and 'Lateness' in col:
+            student_lab_lateness.append(col)
+    student_lab = grades[student_lab_lateness]
+    for col in student_lab:
+        student_lab[col] = student_lab[col].astype(str).str.replace(':','').astype(float)
+    for col in student_lab:
+        student_lab[col] = student_lab[col].between(1,60000)
+    new_name = []
+    for i in student_lab.columns:
+        new_name.append(i[0:5])
+    student_lab.columns = new_name
+    return student_lab.sum()
 
 
 # ---------------------------------------------------------------------
 # Question #4
 # ---------------------------------------------------------------------
-
+    
 def lateness_penalty(col):
     """
     lateness_penalty takes in a 'lateness' column and returns 
@@ -104,7 +149,18 @@ def lateness_penalty(col):
     True
     """
         
-    return ...
+    col = col.apply(lambda x: float(x.replace(':','')))
+    def late_val(x):
+        if x < 50000:
+            return 1.0
+        elif x < 1680000 and x > 30000:
+            return 0.9
+        elif x >= 168000 and x < 3360000:
+            return 0.8
+        else:
+            return 0.5
+    col = col.apply(late_val)
+    return col
 
 
 # ---------------------------------------------------------------------
@@ -130,7 +186,12 @@ def process_labs(grades):
     True
     """
 
-    return ...
+    new = grades.copy()
+    new = new.fillna(0)
+    names = get_assignment_names(grades)['lab']
+    for i in names:
+        new[i] = (new[i]/new[i+' - Max Points'])*lateness_penalty(new[i+' - Lateness (H:M:S)'])
+    return new[names]
 
 
 # ---------------------------------------------------------------------
@@ -152,8 +213,9 @@ def lab_total(processed):
     True
     """
 
-    return ...
-
+    processed = processed.fillna(0)
+    result = (processed.sum(axis = 1)-processed.min(axis = 1))/(len(processed.columns)-1)
+    return result
 
 # ---------------------------------------------------------------------
 # Question # 7
@@ -175,8 +237,30 @@ def total_points(grades):
     True
     """
         
-    return ...
+    labs = 0.2
+    projects = 0.3
+    checkpointp = 0.025
+    disc = 0.025
+    midterm = 0.15 
+    final = 0.30
+    new = grades.copy()
+    new = new.fillna(0)
+    project_score = projects_total(grades)
+    Lab_score =lab_total(process_labs(grades))
+    checkpoints = get_assignment_names(grades)['checkpoint']
+    discussions = get_assignment_names(grades)['disc']
+    for i in checkpoints:
+        new[i] = new[i]/new[i+' - Max Points']
+    check_score = new[checkpoints].mean(axis = 1)
 
+    for i in discussions:
+        new[i] = new[i]/new[i+' - Max Points']
+    disc_score = new[discussions].mean(axis = 1)
+    
+    midterm_scores = new['Midterm']/new['Midterm - Max Points']
+    final_exam_scores = new['Final']/new['Final - Max Points']
+    final_scores = Lab_score * labs + project_score * projects + check_score * checkpointp + disc_score *disc + midterm *midterm_scores + final_exam_scores * final
+    return final_scores
 
 def final_grades(total):
     """
@@ -190,7 +274,18 @@ def final_grades(total):
     True
     """
 
-    return ...
+    def letter(x):
+        if x>=0.9:
+            return 'A'
+        elif x<0.9 and x>=0.8:
+            return 'B'
+        elif x<0.8 and x>=0.7:
+            return 'C'
+        elif x<0.7 and x>=0.6:
+            return 'D'
+        else:
+            return 'F'
+    return pd.Series(list(map(letter, total.tolist())))
 
 
 def letter_proportions(grades):
@@ -208,8 +303,9 @@ def letter_proportions(grades):
     >>> out.sum() == 1.0
     True
     """
-
-    return ...
+    dic = {}
+    letter_series = final_grades(total_points(grades))
+    return letter_series.value_counts()/float(len(grades))
 
 # ---------------------------------------------------------------------
 # Question # 8
@@ -231,7 +327,17 @@ def simulate_pval(grades, N):
     True
     """
 
-    return ...
+    grades = grades.fillna(0.0)
+    num_soph = grades[grades['Level'] == 'SO'].shape[0]
+    class_size = grades.shape[0]
+    soph = grades[grades['Level'] == 'SO']
+    soph_grade = total_points(soph).mean()
+    other_grade = total_points(grades)
+    result = []
+    for i in range(N):
+        sample = np.random.choice(other_grade, replace=False, size=num_soph)
+        result.append(np.mean(sample))
+    return (pd.Series(result) >= soph_grade).mean()
 
 
 # ---------------------------------------------------------------------
@@ -255,8 +361,67 @@ def total_points_with_noise(grades):
     True
     """
 
-    return ...
+    labs = 0.2
+    projects = 0.3
+    checkpointp = 0.025
+    DI = 0.025
+    mt = 0.15 
+    final = 0.30
+    data1 = grades.copy()
+    data = data1.fillna(0)
+    
+    lab_names = get_assignment_names(grades)['lab']
+    labs_ori = process_labs(data)
+    for i in labs_ori.columns:
+        data[i] = labs_ori[i]
+    
+    proj_names = get_assignment_names(grades)['project']
+    dic = {}
+    for i in proj_names:
+        try:
+            raw = data[i] + data[i+ '_free_response']
+            maxi = data[i + ' - Max Points'] + data[i+ '_free_response - Max Points']
+            data[i] = (raw/maxi) 
+        except:   
+            raw = data[i] 
+            maxi = data[i + ' - Max Points']
+            data[i] = (raw/maxi)
+            
+    
+    
+    checkpoints = get_assignment_names(grades)['checkpoint']
+    discussions = get_assignment_names(grades)['disc']
+    
+    for i in checkpoints:
+        data[i] = data[i]/data[i+' - Max Points']
 
+
+    for i in discussions:
+        data[i] = data[i]/data[i+' - Max Points']
+
+    
+    midterm_scores = data['Midterm']/data['Midterm - Max Points']
+    final_exam_scores = data['Final']/data['Final - Max Points']
+    data['Midterm'] = midterm_scores
+    data['Final'] = final_exam_scores
+    
+    selected_col = lab_names + proj_names + checkpoints + discussions + ['Midterm'] +['Final']
+    selected_data = data[selected_col]
+    
+    manipulate = selected_data + np.random.normal(0, 0.02, size=(selected_data.shape[0], selected_data.shape[1]))
+    for i in manipulate.columns:
+        manipulate[i] = np.clip(manipulate[i],0,1)
+        
+    lab_new = lab_total(manipulate[lab_names]) 
+    proj_new = manipulate[proj_names].mean(axis = 1)
+    check_new = manipulate[checkpoints].mean(axis = 1)
+    disc_new = manipulate[discussions].mean(axis = 1)
+    midterm_new = manipulate['Midterm']
+    final_new = manipulate['Final']
+    
+    final_scores = lab_new * labs + proj_new * projects + check_new * checkpointp + disc_new *DI + mt *midterm_new+ final_new * final
+    #return final_scores.mean() == total_points(grades).mean()
+    return final_scores
 
 # ---------------------------------------------------------------------
 # Question #10
@@ -282,7 +447,7 @@ def short_answer():
     True
     """
 
-    return ...
+    return [0.00069610, 82.878, [79.794392, 85.93925], 0.068897, True]
 
 # ---------------------------------------------------------------------
 # DO NOT TOUCH BELOW THIS LINE

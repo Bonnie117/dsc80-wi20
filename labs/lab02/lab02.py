@@ -136,7 +136,7 @@ def trick_me():
     >>> ans == 'A' or ans == 'B' or ans == "C"
     True
     """
-    return tricky_1 = pd.DataFrame([['Bonnie','',''],['Cathy','1','2'],['Norry','3','4'],['0','1','2'],['7','8','9']],columns = ["Name", "Name", "Age"] )
+    tricky_1 = pd.DataFrame([['Bonnie','',''],['Cathy','1','2'],['Norry','3','4'],['0','1','2'],['7','8','9']],columns = ["Name", "Name", "Age"] )
     tricky_1.to_csv('tricky_1.csv',index = False)
     tricky_2 = pd.read_csv('tricky_1.csv')
     return 'C'
@@ -211,7 +211,7 @@ def correct_replacement(nans):
             return "MISSING"
         else:
             return x
-        
+
     return nans.applymap(change)
 
 
@@ -221,16 +221,16 @@ def correct_replacement(nans):
 
 def population_stats(df):
     """
-    population_stats which takes in a dataframe df 
-    and returns a dataframe indexed by the columns 
+    population_stats which takes in a dataframe df
+    and returns a dataframe indexed by the columns
     of df, with the following columns:
-        - `num_nonnull` contains the number of non-null 
+        - `num_nonnull` contains the number of non-null
           entries in each column,
-        - `pct_nonnull` contains the proportion of entries 
+        - `pct_nonnull` contains the proportion of entries
           in each column that are non-null,
-        - `num_distinct` contains the number of distinct 
+        - `num_distinct` contains the number of distinct
           entries in each column,
-        - `pct_distinct` contains the proportion of (non-null) 
+        - `pct_distinct` contains the proportion of (non-null)
           entries in each column that are distinct from each other.
 
     :Example:
@@ -244,41 +244,39 @@ def population_stats(df):
     True
     >>> (out['num_distinct'] <= 10).all()
     True
-    >> (out['pct_nonnull'] == 1.0).all()
+    >>> (out['pct_nonnull'] == 1.0).all()
     True
     """
-    
+
     index = df.columns.values
     num_nonnull =[]
     pct_nonnull= []
     num_distinct = []
     pct_distinct = []
-    
-    number = df.shape[0]
-    
+    num = df.shape[0]
     def change(x):
         return not pd.isnull(x)
-    def fill(x):
+
+    def fil(x):
         if pd.isnull(x):
             return False
         else:
             return True
-        
+
     for i in df.columns:
         col = df[i].apply(change).values
         count = np.count_nonzero(col)
         num_nonnull.append(count)
-        pct_nonnull.append(count/number)
+        pct_nonnull.append(count/num)
         num_distinct.append(df[i].nunique())
-        pct_distinct.append(pd.Series(list(filter(fill,df[i].values.tolist()))).nunique()/number)
-    return pd.DataFrame({'num_nonnull':num_nonnull,'pct_nonnull':pct_nonnull,
-                         'num_distinct':num_distinct,'pct_distinct':pct_distinct},index = ['A', 'B', 'C', 'D'])
+        pct_distinct.append(pd.Series(list(filter(fil,df[i].values.tolist()))).nunique()/num)
 
+    return pd.DataFrame({'num_nonnull':num_nonnull,'pct_nonnull':pct_nonnull,'num_distinct':num_distinct,'pct_distinct':pct_distinct},index = ['A', 'B', 'C', 'D'])
 
 def most_common(df, N=10):
     """
-    `most_common` which takes in a dataframe df and returns 
-    a dataframe of the N most-common values (and their counts) 
+    `most_common` which takes in a dataframe df and returns
+    a dataframe of the N most-common values (and their counts)
     for each column of df.
 
     :param df: input dataframe.
@@ -295,7 +293,7 @@ def most_common(df, N=10):
     >>> out['A_values'].isin(range(10)).all()
     True
     """
-        
+
     result = pd.DataFrame()
     for i in df.columns:
         con = df[i].value_counts()
@@ -347,8 +345,8 @@ def estimate_p_val(N):
     lst = []
     for i in range(N):
         lst.append(np.count_nonzero(simulate_null()))
-    rest = np.array(lst) < 292 #after 8 students
-    result = np.count_nonzero(rest)/len(rest)
+    count = np.array(lst) < 292 #after 8 students
+    result = np.count_nonzero(count)/len(count)
     return result
 
 
@@ -359,7 +357,7 @@ def estimate_p_val(N):
 
 def super_hero_powers(powers):
     """
-    `super_hero_powers` takes in a dataframe like 
+    `super_hero_powers` takes in a dataframe like
     powers and returns a list with the following three entries:
         - The name of the super-hero with the greatest number of powers.
         - The name of the most common super-power among super-heroes whose names begin with 'M'.
@@ -387,13 +385,12 @@ def super_hero_powers(powers):
     M_noHN = most_M.drop('hero_names',axis = 1).applymap(np.count_nonzero)
     modi_M = M_noHN.sum(axis = 0)
     to_find = sorted(modi_M)[-2]
-    
     second_col = modi_M[modi_M == to_find].index[0]
 
     super_power1 = powers[powers['count'] == 1]
     super_power2 = super_power1.drop('hero_names',axis = 1).applymap(np.count_nonzero)
     super_power3 = super_power2.sum(axis=0)
-    
+
     third_col = super_power3[super_power3 == sorted(super_power3)[-2]].index[0]
 
     return [first_col,second_col,third_col]
@@ -420,7 +417,6 @@ def clean_heroes(heroes):
     """
 
     checker = lambda x:np.NaN if x=='-' or x == -99 else x
-    
     return heroes.applymap(checker)
 
 def super_hero_stats():
@@ -442,7 +438,7 @@ def super_hero_stats():
     True
     """
 
-    return ['Marvel Comics',558,'Groot','bad','Onslaugh',0.30578512396694213]
+    return ['Marvel Comics',558,'Groot','bad','Onslaugh',0.2860824742268041]
 
 # ---------------------------------------------------------------------
 # Question 8
@@ -451,8 +447,8 @@ def super_hero_stats():
 
 def bhbe_col(heroes):
     """
-    `bhbe` ('blond-hair-blue-eyes') returns a boolean 
-    column that labels super-heroes/villains that 
+    `bhbe` ('blond-hair-blue-eyes') returns a boolean
+    column that labels super-heroes/villains that
     are blond-haired *and* blue eyed.
 
     :Example:
@@ -466,12 +462,10 @@ def bhbe_col(heroes):
     >>> out.sum()
     93
     """
-
-   cleaned = clean_heroes(heroes)
-    blond_hair = (cleaned['Hair color'].values=='Blond') | (cleaned['Hair color'].values=='blond')|(cleaned['Hair color'].values=='Strawberry Blond')
-    blue_eye = cleaned['Eye color'].values=='blue'
-    
-    return pd.Series(blond_hair & blue_eye)
+    cleaned = clean_heroes(heroes)
+    hair = (cleaned['Hair color'].values=='Blond') | (cleaned['Hair color'].values=='blond')|(cleaned['Hair color'].values=='Strawberry Blond')
+    eye = cleaned['Eye color'].values=='blue'
+    return pd.Series(hair & eye)
 
 
 def observed_stat(heroes):
@@ -486,19 +480,18 @@ def observed_stat(heroes):
     >>> 0.5 <= out <= 1.0
     True
     """
-    
+
     heroes['bhbe'] = bhbe_col(heroes)
     observed = heroes[heroes['bhbe'] == True]
-    observed_prop = observed[observed['Alignment'] == 'good'].shape[0]/observed.shape[0]
-    
-    return observed_prop
+    observed_proportion = observed[observed['Alignment'] == 'good'].shape[0]/observed.shape[0]
+    return observed_proportion
 
 def simulate_bhbe_null(n):
     """
-    `simulate_bhbe_null` that takes in a number `n` 
-    that returns a `n` instances of the test statistic 
-    generated under the null hypothesis. 
-    You should hard code your simulation parameter 
+    `simulate_bhbe_null` that takes in a number `n`
+    that returns a `n` instances of the test statistic
+    generated under the null hypothesis.
+    You should hard code your simulation parameter
     into the function; the function should *not* read in any data.
 
     :Example:
@@ -513,21 +506,21 @@ def simulate_bhbe_null(n):
     True
     """
 
-    result = []
+    output = []
     p = 0.8494623655913979
     for i in range(n):
         stat = np.random.binomial(93,p)/93
-        result.append(stat)
-    return pd.Series(result)
+        output.append(stat)
+    return pd.Series(output)
 
 
 def calc_pval():
     """
     calc_pval returns a list where:
-        - the first element is the p-value for 
+        - the first element is the p-value for
         hypothesis test (using 100,000 simulations).
-        - the second element is Reject if you reject 
-        the null hypothesis and Fail to reject if you 
+        - the second element is Reject if you reject
+        the null hypothesis and Fail to reject if you
         fail to reject the null hypothesis.
 
     :Example:
@@ -570,7 +563,7 @@ def check_for_graded_elements():
     >>> check_for_graded_elements()
     True
     """
-    
+
     for q, elts in GRADED_FUNCTIONS.items():
         for elt in elts:
             if elt not in globals():
