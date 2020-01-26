@@ -9,7 +9,7 @@ import os
 def plot_meal_by_day(tips):
     """
     Plots the counts of meals in tips by day.
-    plot_meal_by_day returns an matplotlib.axes._subplots.AxesSubplot 
+    plot_meal_by_day returns an matplotlib.axes._subplots.AxesSubplot
     object; your plot should look like the plot in the notebook.
 
     :Example:
@@ -19,13 +19,13 @@ def plot_meal_by_day(tips):
     <class 'matplotlib.axes._subplots.AxesSubplot'>
     """
 
-    return ...
+    return tips.groupby('day').count()['total_bill'].plot(kind='barh',color = ['blue','orange','green','red'],title='Counts of meals by day',)
 
 
 def plot_bill_by_tip(tips):
     """
     Plots a seaborn scatterplot using the tips data by day.
-    plot_bill_by_tip returns a matplotlib.axes._subplots.AxesSubplot object; 
+    plot_bill_by_tip returns a matplotlib.axes._subplots.AxesSubplot object;
     your plot should look like the plot in the notebook.
 
     - tip is on the x-axis.
@@ -40,15 +40,16 @@ def plot_bill_by_tip(tips):
     <class 'matplotlib.axes._subplots.AxesSubplot'>
     """
 
-    return ...
+    plot = sns.scatterplot(data=tips, x='tip', y='total_bill', hue='day',size=tips['size'])
+    return plot
 
 
 def plot_tip_percentages(tips):
     """
-    Plots a figure with two subplots side-by-side. 
-    The left plot should contain the counts of tips as a percentage of the total bill. 
-    The right plot should contain the density plot of tips as a percentage of the total bill. 
-    plot_tip_percentages should return a matplotlib.Figure object; 
+    Plots a figure with two subplots side-by-side.
+    The left plot should contain the counts of tips as a percentage of the total bill.
+    The right plot should contain the density plot of tips as a percentage of the total bill.
+    plot_tip_percentages should return a matplotlib.Figure object;
     your plot should look like the plot in the notebook.
 
     :Example:
@@ -58,4 +59,15 @@ def plot_tip_percentages(tips):
     <class 'matplotlib.figure.Figure'>
     """
 
-    return ...
+    fig, axes = plt.subplots(1, 2)
+
+    # plot axes[0]
+    tips['counts'] = tips['tip']/tips['total_bill']
+    tips['counts'].plot(kind='hist', ax=axes[0], title='counts')
+    # plot axes[1]
+    tips['percent'] = tips['tip']/tips['total_bill']
+    tips['percent'].plot(kind='hist', density=True, ax=axes[1], title='normalized')
+    # add the title to fig
+    fig.suptitle('histogram of tips percentages')
+
+    return fig
